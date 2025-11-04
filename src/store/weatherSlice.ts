@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { getWeatherForLatLon } from '../api/weatherApi'
 
-export const fetchWeather = createAsyncThunk('weather/fetch', async ({lat, lon}:{lat:number, lon:number})=>{
-  const data = await getWeatherForLatLon(lat, lon)
+export const fetchWeather = createAsyncThunk('weather/fetch', async ({lat, lon}:{lat:number, lon:number}, { getState })=>{
+  const state = getState() as any
+  const units: string = state.unit?.unit ?? 'metric'
+  const data = await getWeatherForLatLon(lat, lon, units)
   return { lat, lon, data }
 })
 

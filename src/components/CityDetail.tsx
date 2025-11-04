@@ -13,14 +13,18 @@ export default function CityDetail(){
   const [hourly, setHourly] = useState<any[]>([])
   const [daily, setDaily] = useState<any[]>([])
   const [mode, setMode] = useState<'hourly'|'daily'>('hourly')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(()=>{
     if (!lat || !lon) return
+    setError(null)
     getWeatherForLatLon(lat, lon).then(res=>{
       setData(res)
       setHourly(res.hourly?.slice(0,24).map((h:any, i:number)=>({
         time: new Date(h.dt*1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        temp: h.temp
+        temp: h.temp,
+        pop: h.pop,
+        wind: h.wind_speed
       })))
       setDaily(res.daily?.slice(0,7).map((d:any)=>({
         date: new Date(d.dt*1000).toLocaleDateString([], {month:'short', day:'numeric'}),
@@ -28,6 +32,9 @@ export default function CityDetail(){
         temp_max: d.temp?.max,
         pop: d.pop
       })) || [])
+    }).catch(err=>{
+      console.error(err)
+      setError('Failed to load weather data')
     })
   }, [lat, lon])
 
@@ -53,15 +60,41 @@ export default function CityDetail(){
           </div>
 
           {mode === 'hourly' && (
-            <div className="card" style={{height:240}}>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={hourly}>
-                  <XAxis dataKey="time" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="temp" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
+            <div>
+              <div className="card" style={{height:240}}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={hourly}>
+                    <XAxis dataKey="time" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="temp" stroke="#8884d8" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <h4 style={{marginTop:12}}>Wind (next 24h)</h4>
+              <div className="card" style={{height:180}}>
+                <ResponsiveContainer width="100%" height={140}>
+                  <LineChart data={hourly}>
+                    <XAxis dataKey="time" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line name="Wind speed (m/s)" type="monotone" dataKey="wind" stroke="#888888" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <h4 style={{marginTop:12}}>Precipitation probability (next 24h)</h4>
+              <div className="card" style={{height:140}}>
+                <ResponsiveContainer width="100%" height={100}>
+                  <LineChart data={hourly}>
+                    <XAxis dataKey="time" />
+                    <YAxis domain={[0,1]} tickFormatter={(v)=>Math.round(v*100)+'%'} />
+                    <Tooltip formatter={(v:any)=> (typeof v === 'number' ? Math.round(v*100)+'%' : v)} />
+                    <Line name="Precip" type="monotone" dataKey="pop" stroke="#1f77b4" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
 
