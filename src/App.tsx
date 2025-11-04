@@ -13,7 +13,11 @@ export default function App() {
     return <div className="app"><div className="card">Loading...</div></div>
   }
 
-  if (!user) {
+  // Allow access without authentication if Firebase is not configured
+  const authRequired = import.meta.env.VITE_FIREBASE_API_KEY && 
+                       import.meta.env.VITE_FIREBASE_API_KEY !== 'your_firebase_api_key'
+  
+  if (authRequired && !user) {
     return (
       <div className="app">
         <Login />
@@ -26,23 +30,27 @@ export default function App() {
       <div className="header">
         <h1><Link to="/">Weather Analytics</Link></h1>
         <div style={{display:'flex', gap:12, alignItems:'center'}}>
-          <div style={{fontSize:14, color:'#666'}}>
-            {user.displayName || user.email}
-          </div>
+          {user && (
+            <div style={{fontSize:14, color:'#666'}}>
+              {user.displayName || user.email}
+            </div>
+          )}
           <UnitToggle />
-          <button 
-            onClick={signOut}
-            style={{
-              padding:'6px 12px',
-              border:'1px solid #ccc',
-              borderRadius:4,
-              background:'white',
-              color:'#333',
-              cursor:'pointer'
-            }}
-          >
-            Sign out
-          </button>
+          {user && (
+            <button 
+              onClick={signOut}
+              style={{
+                padding:'6px 12px',
+                border:'1px solid #ccc',
+                borderRadius:4,
+                background:'white',
+                color:'#333',
+                cursor:'pointer'
+              }}
+            >
+              Sign out
+            </button>
+          )}
         </div>
       </div>
       <Routes>
